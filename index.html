@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Converter</title>
+    
+    <link rel="icon" href="convert.png">
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        :root {
+            --bg: #ffffff; --surface: #f8f9fa; --border: #e9ecef;
+            --accent: #FF4C2C; --text-main: #121212; --text-muted: #6c757d; --pill-bg: #f1f3f5;
+        }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; outline: none; }
+        body { margin: 0; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        header { 
+            height: 72px; padding: 0 24px; display: flex; align-items: center; 
+            justify-content: space-between; border-bottom: 1px solid var(--border); flex-shrink: 0; 
+        }
+        .brand { cursor:pointer; display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -0.5px; }
+        
+        .logo-mark { width: 32px; height: 32px; background: url("convert.png"); background-size:cover; border-radius: 8px; }
+    
+        .transport { display: flex; align-items: center; background: var(--pill-bg); padding: 4px; border-radius: 100px; gap: 4px; }
+        .pill-btn { 
+            height: 36px; padding: 0 16px; border-radius: 100px; border: none; 
+            background: transparent; font-size: 13px; font-weight: 500; color: var(--text-main); 
+            cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; 
+        }
+        .pill-btn:hover { background: rgba(0,0,0,0.05); }
+        .pill-btn.active { background: var(--accent); color: white; }
+        
+        .icon { 
+            width: 18px; 
+            height: 18px; 
+            fill: currentColor; 
+            display: block;
+            flex-shrink: 0;
+        }
+
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; max-width: 900px; margin: 0 auto; width: 100%; overflow-y: auto; }
+        .drop-zone { 
+            width: 100%; min-height: 160px; border: 1px dashed #ced4da; border-radius: 24px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            background: var(--surface); cursor: pointer; transition: 0.2s;
+        }
+        .drop-zone:hover { border-color: var(--accent); background: #fffaf9; }
+        
+        .file-list { width: 100%; margin-top: 32px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 40px; }
+        .track-item { 
+            background: var(--bg); border: 1px solid var(--border); border-radius: 16px; 
+            padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; 
+        }
+        .file-info { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; }
+        .file-meta b { display: block; font-size: 14px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+        .file-meta span { font-size: 12px; color: var(--text-muted); }
+        
+        .select-wrapper { position: relative; display: flex; align-items: center; }
+        .select-wrapper::after {
+            content: ""; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent;
+            border-top: 5px solid var(--text-muted); pointer-events: none;
+        }
+
+        select { 
+            background: var(--pill-bg); border: none; padding: 8px 30px 8px 16px; 
+            border-radius: 100px; font-size: 12px; font-weight: 600; cursor: pointer; appearance: none;
+        }
+        
+        .round-btn { 
+            width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); 
+            background: white; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; color: var(--text-muted); 
+        }
+        .round-btn:hover { border-color: var(--text-main); color: var(--text-main); }
+        .status-tag { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand" onclick="window.location.reload()"><div class="logo-mark"></div> File Converter</div>
+    <div class="transport">
+        <button class="pill-btn" onclick="document.getElementById('fileInput').click()">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Media
+        </button>
+        <button class="pill-btn active" id="convertBtn">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M16 1l-4 4h9v2H12l4 4-1.41 1.41L9.17 7H1v10h22V1h-7z"/></svg> Convert All
+        </button>
+    </div>
+    <button class="pill-btn" style="background:#eee" onclick="window.top.location.href = 'https://jamesy-tech.github.io/jamesy-creator';">Home</button>
+</header>
+
+<main>
+    <div class="drop-zone" id="dz" onclick="document.getElementById('fileInput').click()">
+        <svg style="width:32px; height:32px; color:#adb5bd" viewBox="0 0 24 24"><path fill="currentColor" d="M14,2L20,8V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V4A2,2 0 0,1 6,2H14M18,20V9H13V4H6V20H18M12,12L16,16H13V19H11V16H8L12,12Z" /></svg>
+        <p style="color:var(--text-muted); font-size: 14px; font-weight: 500;">Drop images & videos or click here to browse your files</p>
+        <input type="file" id="fileInput" hidden multiple accept="image/*,video/mp4,.heic,.heif">
+    </div>
+    <div class="file-list" id="fileList"></div>
+</main>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const convertBtn = document.getElementById('convertBtn');
+    let queue = [];
+
+    const iconVideo = '<svg class="icon" viewBox="0 0 24 24"><path d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z" /></svg>';
+    const iconImage = '<svg class="icon" viewBox="0 0 24 24"><path d="M8.5,13.5L11,16.5L14.5,12L19,18H5L8.5,13.5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z" /></svg>';
+    const iconClose = '<svg class="icon" style="width:14px" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>';
+
+    fileInput.onchange = (e) => {
+        Array.from(e.target.files).forEach(file => {
+            const id = Math.random().toString(36).substr(2, 9);
+            const isVideo = file.type.includes('video');
+            const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+            queue.push({ id, file, isVideo, isHeic });
+
+            const item = document.createElement('div');
+            item.className = 'track-item';
+            item.id = `item-${id}`;
+            item.innerHTML = `
+                <div class="file-info">
+                    <div class="round-btn">${isVideo ? iconVideo : iconImage}</div>
+                    <div class="file-meta"><b>${file.name}</b><span id="st-${id}">Ready</span></div>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="select-wrapper">
+                        <select id="fmt-${id}">
+                            ${isVideo ? 
+                                '<option value="mp3">to M4A</option><option value="wav">to WAV</option>' : 
+                                '<option value="webp">to WEBP</option><option value="png">to PNG</option><option value="jpeg">to JPG</option>'}
+                        </select>
+                    </div>
+                    <button class="round-btn" onclick="removeFile('${id}')">${iconClose}</button>
+                </div>`;
+            fileList.appendChild(item);
+        });
+        fileInput.value = '';
+    };
+
+    function removeFile(id) { queue = queue.filter(i => i.id !== id); document.getElementById(`item-${id}`).remove(); }
+
+    convertBtn.onclick = async () => {
+        if(!queue.length) return;
+        for (let item of queue) {
+            const status = document.getElementById(`st-${item.id}`);
+            const format = document.getElementById(`fmt-${item.id}`).value;
+            status.innerHTML = `<span class="status-tag">Processing...</span>`;
+
+            try {
+                if (item.isVideo) {
+                    await extractAudio(item.file, format);
+                } else {
+                    const dataUrl = await convertImg(item, 'image/' + format);
+                    download(dataUrl, `jamesy-${item.file.name.split('.')[0]}.${format}`);
+                }
+                status.innerText = "✓ Done";
+            } catch (e) {
+                status.innerText = "Error";
+            }
+        }
+    };
+
+    async function convertImg(item, fmt) {
+        let fileToProcess = item.file;
+        
+        if (item.isHeic) {
+            const blob = await heic2any({ blob: item.file, toType: "image/jpeg" });
+            fileToProcess = blob;
+        }
+
+        return new Promise(res => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width; canvas.height = img.height;
+                    canvas.getContext('2d').drawImage(img, 0, 0);
+                    res(canvas.toDataURL(fmt));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(fileToProcess);
+        });
+    }
+
+    async function extractAudio(file, type) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = await file.arrayBuffer();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        
+        if (type === 'wav') {
+            const wavData = audioBufferToWav(audioBuffer);
+            const blob = new Blob([wavData], { type: 'audio/wav' });
+            download(URL.createObjectURL(blob), `${file.name.split('.')[0]}.wav`);
+        } else {
+            const stream = audioCtx.createMediaStreamDestination();
+            const source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(stream);
+            
+            const recorder = new MediaRecorder(stream.stream);
+            const chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'audio/mp4' });
+                download(URL.createObjectURL(blob), `${file.name.split('.')[0]}.mp3`);
+            };
+            recorder.start();
+            source.start();
+            setTimeout(() => recorder.stop(), (audioBuffer.duration * 1000) + 100);
+        }
+    }
+
+    function download(url, name) {
+        const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+    }
+
+    function audioBufferToWav(buffer) {
+        let n = buffer.numberOfChannels, len = buffer.length * n * 2 + 44,
+            buf = new ArrayBuffer(len), view = new DataView(buf),
+            ch = [], i, s, off = 0, p = 0;
+        const u32 = (d) => { view.setUint32(p, d, true); p += 4; };
+        const u16 = (d) => { view.setUint16(p, d, true); p += 2; };
+        u32(0x46464952); u32(len - 8); u32(0x45564157); u32(0x20746d66); u32(16); u16(1); u16(n);
+        u32(buffer.sampleRate); u32(buffer.sampleRate * 2 * n); u16(n * 2); u16(16); u32(0x61746164); u32(len - p - 4);
+        for(i=0; i<n; i++) ch.push(buffer.getChannelData(i));
+        while(p < len) {
+            for(i=0; i<n; i++) {
+                s = Math.max(-1, Math.min(1, ch[i][off]));
+                view.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7FFF, true); p += 2;
+            }
+            off++;
+        }
+        return buf;
+    }
+</script>
+</body>
+</html>
